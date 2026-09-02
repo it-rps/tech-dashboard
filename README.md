@@ -1,146 +1,76 @@
-# Next.js Admin Template with TypeScript & Shadcn UI
+# Where these files go — Hermes Agent
 
-**Studio Admin** - Includes multiple dashboards, authentication layouts, customizable theme presets, and more.
+This package has two parts, and Hermes has specific rules for where
+each one belongs and how it gets loaded.
 
-<img src="https://github.com/arhamkhnz/next-shadcn-admin-dashboard/blob/main/media/dashboard.png?version=5" alt="Dashboard Screenshot">
-
-Most admin templates I found, free or paid, felt cluttered, outdated, or too rigid. I built this as a cleaner alternative with features often missing in others, such as theme toggling and layout controls, while keeping the design modern, minimal, and flexible.
-
-> **View demo:** [studio admin](https://next-shadcn-admin-dashboard.vercel.app)
-
-> [!NOTE]
-> Looking for the Base UI version? Check out [next-shadcn-admin-dashboard-baseui](https://github.com/arhamkhnz/next-shadcn-admin-dashboard-baseui).
->
-> Looking for the React Aria version? Check out [arhamkhnz/next-shadcn-admin-dashboard-aria](https://github.com/arhamkhnz/next-shadcn-admin-dashboard-aria).
->
-> Looking for the TanStack Start version? Check out [tanstack-shadcn-admin-dashboard](https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard).
-
-> [!TIP]
-> I’m also working on Nuxt.js and Svelte versions of this dashboard. They’ll be live soon.
-
-## Features
-
-- Built with Next.js 16, TypeScript, Tailwind CSS v4, and Shadcn UI  
-- Responsive and mobile-friendly  
-- Customizable theme presets (light/dark modes with color schemes like Tangerine, Brutalist, and more)  
-- Flexible layouts (collapsible sidebar, variable content widths)  
-- Authentication flows and screens  
-- Prebuilt dashboards (Default, CRM, Finance, Analytics, Productivity) plus legacy variants  
-- Role-Based Access Control (RBAC) with config-driven UI and multi-tenant support *(planned)*  
-
-> [!NOTE]
-> The default dashboard uses the **shadcn neutral** theme.  
-> It also includes additional color presets inspired by [Tweakcn](https://tweakcn.com):  
->
-> - Tangerine  
-> - Neo Brutalism  
-> - Soft Pop  
->
-> You can create more presets by following the same structure as the existing ones.
-
-> Looking for the **Next.js 15** version?  
-> Check out the [`archive/next15`](https://github.com/arhamkhnz/next-shadcn-admin-dashboard/tree/archive/next15) branch.  
-> This branch contains the setup prior to upgrading to Next 16 and the React Compiler.
-
-> Looking for the **Next.js 14 + Tailwind CSS v3** version?  
-> Check out the [`archive/next14-tailwindv3`](https://github.com/arhamkhnz/next-shadcn-admin-dashboard/tree/archive/next14-tailwindv3) branch.  
-> It has a different color theme and is not actively maintained, but I try to keep it updated with major changes.  
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router), TypeScript, Tailwind CSS v4  
-- **UI Components**: Shadcn UI  
-- **Validation**: Zod  
-- **Forms & State Management**: React Hook Form, Zustand  
-- **Tables & Data Handling**: TanStack Table  
-- **Tooling & DX**: Biome, Husky  
-
-## Screens
-
-### Available
-- Default Dashboard  
-- CRM Dashboard  
-- Finance Dashboard  
-- Analytics Dashboard  
-- Productivity Dashboard  
-- E-commerce Dashboard  
-- Academy Dashboard  
-- Logistics Dashboard  
-- Infrastructure Dashboard  
-- File Manager  
-- Patient Monitoring  
-- Chat Page  
-- Email Page  
-- Profile  
-- Users Management  
-- Roles Management  
-- Kanban Board  
-- Tasks Page  
-- Invoice Page  
-- Calendar Page  
-- Authentication (4 screens)  
-- Legacy: Default v1, CRM v1, Finance v1, Analytics v1
-
-### Planned
-I’ve added all the planned screens. Feel free to open an issue for requesting something specific.
-
-## Colocation File System Architecture
-
-This project follows a **colocation-based architecture** each feature keeps its own pages, components, and logic inside its route folder.  
-Shared UI, hooks, and configuration live at the top level, making the codebase modular, scalable, and easier to maintain as the app grows.
-
-For a full breakdown of the structure with examples, see the [Next Colocation Template](https://github.com/arhamkhnz/next-colocation-template).
-
-## Getting Started
-
-You can run this project locally, or deploy it instantly with Vercel.
-
-### Deploy with Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farhamkhnz%2Fnext-shadcn-admin-dashboard)
-
-_Deploy your own copy with one click._
-
-### Run locally
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/arhamkhnz/next-shadcn-admin-dashboard.git
-   ```
-   
-2. **Navigate into the project**
-   ```bash
-    cd next-shadcn-admin-dashboard
-   ```
-   
-3. **Install dependencies**
-   ```bash
-    npm install
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-Your app will be running at [http://localhost:3000](http://localhost:3000)
-
-### Formatting and Linting
-
-Format, lint, and organize imports
-```bash
-npx @biomejs/biome check --write
 ```
-> For more information on available rules, fixes, and CLI options, refer to the [Biome documentation](https://biomejs.dev/).
+your-project/                          ← git root
+├── AGENTS.md                          ← put this here
+└── skills/
+    └── project/                       ← category folder — pick any name
+        └── irepair-stock-service/     ← put this whole folder here
+            ├── SKILL.md
+            └── references/
+                ├── decision-rules.md
+                ├── business-context.md
+                ├── tech-stack.md
+                ├── file-structure.md
+                ├── database-schema.md
+                ├── costing-logic.md
+                ├── business-flows.md
+                ├── code-patterns.md
+                ├── responsive-spec.md
+                └── i18n-dashboard-reports.md
+```
 
----
+## 1. `AGENTS.md` — project root, not `CLAUDE.md`
 
-> [!IMPORTANT]  
-> This project is updated frequently. If you’re working from a fork or an older clone, pull the latest changes before syncing. Some updates may include breaking changes.
+Hermes loads **only one** project context file per session, first match
+wins, in this order: `.hermes.md` → `AGENTS.md` → `CLAUDE.md` →
+`.cursorrules`. Since `AGENTS.md` sits above `CLAUDE.md` in that list,
+this package uses `AGENTS.md` — don't keep a `CLAUDE.md` alongside it,
+Hermes would never read it.
 
----
+Hermes also discovers `AGENTS.md` **progressively as it walks into
+subdirectories** during a session — so if this project later grows
+`frontend/` or `backend/` subfolders with their own `AGENTS.md`, Hermes
+will pick those up automatically when it reads files there. You don't
+need to do anything for that to work; it's mentioned here so you know
+the behavior if you split the project later.
 
-Contributions are welcome. Feel free to open issues, feature requests, or start a discussion.
+## 2. The Skill — `skills/<category>/irepair-stock-service/`
 
+Hermes expects in-repo skills at
+`skills/<category>/<name>/SKILL.md` (or `optional-skills/...` for
+skills you don't want active by default). `<category>` is just a
+folder you choose for organization — `project/`, `dev/`, anything
+reasonable works. Put the whole `irepair-stock-service/` folder inside
+it, unchanged.
 
-**Happy Vibe Coding!**
+Hermes loads skills the same progressive way described earlier in this
+chat: a compact list of all skills loads at session start (~3k tokens
+total across all skills), then the full `SKILL.md` for this one loads
+only when Hermes decides a task matches its `description`, and each
+`references/*.md` file loads only when that specific file is needed.
+This is exactly the behavior the Step Router in `SKILL.md` was written
+for — no changes needed there.
+
+## 3. Alternative: install to `~/.hermes/skills/` instead
+
+If you want this Skill available across every project rather than just
+this one repo, copy `irepair-stock-service/` into
+`~/.hermes/skills/<category>/` instead of committing it inside the
+project repo. Functionally identical — just changes whether it's
+project-scoped (in-repo) or available everywhere (global).
+
+## 4. One thing to double-check yourself
+
+Hermes runs a description-length check when reviewing skills (some
+guidance suggests keeping the trigger/summary tight, ideally noticeable
+within roughly the first 60 characters). This Skill's `description` in
+`SKILL.md`'s frontmatter is intentionally detailed so Claude and other
+agentskills.io-compatible tools trigger on it reliably — if Hermes's
+skill review flags it as too long, you can trim it to a shorter
+sentence without losing function; the Step Router table inside
+`SKILL.md` is what actually does the routing work, not the frontmatter
+description's length.
