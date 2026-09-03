@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BarChart3,
   Boxes,
   Calendar,
   ChartBar,
@@ -77,6 +78,18 @@ export const sidebarItems: NavGroup[] = [
         title: "Default",
         url: "/dashboard/default",
         icon: LayoutDashboard,
+      },
+      {
+        id: "overview",
+        title: "Overview",
+        url: "/dashboard",
+        icon: BarChart3,
+      },
+      {
+        id: "reports",
+        title: "Reports",
+        url: "/dashboard/reports",
+        icon: BarChart3,
       },
       {
         id: "crm",
