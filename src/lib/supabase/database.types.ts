@@ -1780,6 +1780,17 @@ export type Database = {
       generate_lot_no: { Args: never; Returns: string }
       generate_purchase_order_doc_no: { Args: never; Returns: string }
       is_active_user: { Args: never; Returns: boolean }
+      receive_goods: {
+        Args: {
+          p_items: Json
+          p_note: string
+          p_purchase_order_id: string
+          p_received_date: string
+          p_shipping_cost: number
+          p_supplier_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       claim_status:
