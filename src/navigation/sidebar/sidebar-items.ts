@@ -193,6 +193,12 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/goods-receipts",
         icon: Truck,
       },
+      {
+        id: "stock",
+        title: "Stock",
+        url: "/dashboard/stock",
+        icon: Boxes,
+      },
     ],
   },
   {
