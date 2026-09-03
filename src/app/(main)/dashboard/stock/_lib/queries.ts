@@ -49,3 +49,49 @@ export async function getStockSummary(
     canSeeCost: canCost,
   };
 }
+
+export type ProductDetail = StockRow;
+
+export type LotRow = {
+  id: string;
+  lot_no: string;
+  qty_received: number;
+  qty_remaining: number;
+  unit_cost: number;
+  landed_unit_cost: number;
+  received_at: string;
+};
+
+export async function getProductLots(
+  productId: string,
+  role: Role,
+): Promise<{ product: ProductDetail; lots: LotRow[] } | null> {
+  const supabase = await createClient();
+  const canCost = canSeeCost(role);
+
+  const productCols = canCost
+    ? "product_id, sku, name_th, name_en, category_slug, brand_name, reorder_point, qty_good, qty_reserved, qty_available, qty_defective, qty_scrap, wac_cost, last_cost, stock_value"
+    : "product_id, sku, name_th, name_en, category_slug, brand_name, reorder_point, qty_good, qty_reserved, qty_available, qty_defective, qty_scrap";
+
+  const { data: product, error: productErr } = await supabase
+    .from("v_stock_summary")
+    .select(productCols)
+    .eq("product_id", productId)
+    .single();
+
+  if (productErr || !product) return null;
+
+  // Uses inventory_lots.qty_remaining directly — no need to compute from movements
+  const { data: lots, error: lotsErr } = await supabase
+    .from("inventory_lots")
+    .select("id, lot_no, qty_received, qty_remaining, unit_cost, landed_unit_cost, received_at")
+    .eq("product_id", productId)
+    .order("received_at", { ascending: true });
+
+  if (lotsErr) throw new Error(lotsErr.message);
+
+  return {
+    product: product as unknown as ProductDetail,
+    lots: (lots ?? []) as LotRow[],
+  };
+}

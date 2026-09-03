@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { LayoutGrid, Table as TableIcon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -105,10 +106,15 @@ function Table({ rows, canSeeCost }: { rows: StockRow[]; canSeeCost: boolean }) 
             return (
               <tr key={r.product_id} className="border-b last:border-0">
                 <td className="p-2">
-                  <div className="min-w-0 flex flex-col">
-                    <span className="truncate font-medium">{r.name_th}</span>
-                    <span className="text-muted-foreground truncate text-xs sm:hidden">{r.sku}</span>
-                  </div>
+                  <Link
+                    href={`/dashboard/stock/${r.product_id}`}
+                    className="hover:underline"
+                  >
+                    <div className="min-w-0 flex flex-col">
+                      <span className="truncate font-medium">{r.name_th}</span>
+                      <span className="text-muted-foreground truncate text-xs sm:hidden">{r.sku}</span>
+                    </div>
+                  </Link>
                 </td>
                 <td className="hidden p-2 sm:table-cell">{r.sku ?? "-"}</td>
                 <td className="hidden p-2 md:table-cell">
@@ -137,7 +143,11 @@ function CardList({ rows, canSeeCost }: { rows: StockRow[]; canSeeCost: boolean 
   return (
     <div className="grid gap-3">
       {rows.map((r) => (
-        <div key={r.product_id} className="flex flex-col gap-1 rounded-lg border p-3">
+        <Link
+          key={r.product_id}
+          href={`/dashboard/stock/${r.product_id}`}
+          className="flex flex-col gap-1 rounded-lg border p-3 hover:bg-muted/30"
+        >
           <div className="flex items-center justify-between gap-2">
             <span className="min-w-0 flex-1 truncate font-medium">{r.name_th}</span>
             <Badge variant={r.qty_available === 0 ? "destructive" : r.qty_available <= r.reorder_point ? "secondary" : "outline"}>
@@ -148,7 +158,7 @@ function CardList({ rows, canSeeCost }: { rows: StockRow[]; canSeeCost: boolean 
             <span>{r.sku ?? "—"} · {r.category_slug ?? "—"}</span>
             {canSeeCost && <span className="tabular-nums">WAC {formatTHB(r.wac_cost ?? 0)}</span>}
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
