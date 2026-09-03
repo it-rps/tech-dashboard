@@ -2236,10 +2236,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_sales_order: {
+        Args: {
+          p_actor_id: string
+          p_customer_id: string
+          p_discount: number
+          p_items: Json
+          p_note: string
+          p_price_tier: Database["public"]["Enums"]["price_tier"]
+          p_tax_mode: Database["public"]["Enums"]["tax_mode"]
+          p_vat_rate: number
+        }
+        Returns: string
+      }
       generate_goods_receipt_doc_no: { Args: never; Returns: string }
       generate_lot_no: { Args: never; Returns: string }
       generate_purchase_order_doc_no: { Args: never; Returns: string }
       generate_repair_job_doc_no: { Args: never; Returns: string }
+      generate_sales_order_doc_no: { Args: never; Returns: string }
       is_active_user: { Args: never; Returns: boolean }
       issue_stock_fifo: {
         Args: {
@@ -2271,6 +2285,7 @@ export type Database = {
         Args: { p_product_id: string; p_qty: number }
         Returns: undefined
       }
+      round2: { Args: { n: number }; Returns: number }
     }
     Enums: {
       claim_status:

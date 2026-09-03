@@ -219,6 +219,12 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/repair-orders",
         icon: Stethoscope,
       },
+      {
+        id: "sales",
+        title: "Sales",
+        url: "/dashboard/sales",
+        icon: ReceiptText,
+      },
     ],
   },
   {
