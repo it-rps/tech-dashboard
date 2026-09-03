@@ -181,6 +181,12 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/products",
         icon: ShoppingBag,
       },
+      {
+        id: "purchase-orders",
+        title: "Purchase Orders",
+        url: "/dashboard/purchase-orders",
+        icon: Truck,
+      },
     ],
   },
   {
