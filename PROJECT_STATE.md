@@ -46,7 +46,7 @@ Entities built:
 - v1 kept: `/auth/v1/login`, `/auth/v1/register` (left-column branded layout)
 - v2 DELETED: `src/app/(main)/auth/v2/` folder removed
 - Shared forms: `src/app/(main)/auth/_components/{login,register}-form.tsx`
-- Forms currently use **mock `onSubmit` (toast only)** — no real auth wiring yet
+- **Real auth wired**: Server Actions at `src/app/(main)/auth/actions.ts` (login/register via Supabase email+password), `src/proxy.ts` guards `/dashboard/*` and `/auth/*`. Google button still stub (OAuth needs env vars).
 
 ## Patterns Established
 - **Server Action pattern:** `"use server"` → `zodSchema.safeParse(input)` → `requireRole([...])` → `supabase.from(...).upsert(...)` → `revalidatePath()`
