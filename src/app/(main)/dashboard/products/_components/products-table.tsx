@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -43,8 +43,8 @@ function ProductForm({
   onClose: () => void;
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, handleSubmit, watch } = useForm<FormInput>({
-    resolver: zodResolver(productSchema),
+  const { register, handleSubmit, control } = useForm<FormInput>({
+    resolver: zodResolver(productSchema) as never,
     defaultValues: product
       ? {
           sku: product.sku,
@@ -66,7 +66,7 @@ function ProductForm({
           barcode: undefined,
           name_th: "",
           name_en: undefined,
-          category_id: "",
+          category_id: categories[0]?.id ?? "",
           brand_id: undefined,
           capacity_mah: undefined,
           requires_tagon: false,
@@ -111,32 +111,42 @@ function ProductForm({
         </div>
         <div>
           <Label htmlFor="category_id">Category *</Label>
-          <Select defaultValue={watch("category_id")}>
-            <SelectTrigger id="category_id">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <input type="hidden" {...register("category_id")} />
+          <Controller
+            control={control}
+            name="category_id"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id="category_id">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
         <div>
           <Label htmlFor="brand_id">Brand</Label>
-          <Select defaultValue={watch("brand_id") ?? ""}>
-            <SelectTrigger id="brand_id">
-              <SelectValue placeholder="Select brand (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">None</SelectItem>
-              {brands.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <input type="hidden" {...register("brand_id")} />
+          <Controller
+            control={control}
+            name="brand_id"
+            render={({ field }) => (
+              <Select onValueChange={(v) => field.onChange(v || undefined)} value={field.value ?? ""}>
+                <SelectTrigger id="brand_id">
+                  <SelectValue placeholder="Select brand (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {brands.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
         <div>
           <Label htmlFor="capacity_mah">Capacity (mAh)</Label>
