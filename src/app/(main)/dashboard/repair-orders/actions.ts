@@ -210,6 +210,79 @@ const closeSchema = z.object({
   discount: z.coerce.number().min(0).default(0),
 });
 
+export async function addRepairJobItems(
+  input: unknown,
+): Promise<ActionResult<{ count: number }>> {
+  await requireRole(["owner", "manager", "technician"]);
+  const { addPartsSchema } = await import("./_lib/schema");
+  const parsed = addPartsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+
+  // guard: refuse if job already closed/delivered
+  const { data: job, error: jobErr } = await supabase
+    .from("repair_jobs")
+    .select("status")
+    .eq("id", parsed.data.job_id)
+    .single();
+  if (jobErr || !job) return { ok: false, error: "Job not found" };
+  if (job.status === "done" || job.status === "delivered") {
+    return { ok: false, error: "Cannot add parts to a closed job" };
+  }
+
+  // insert items (reservation only — close RPC will issue + cost)
+  const { error: itemsErr } = await supabase.from("repair_job_items").insert(
+    parsed.data.items.map((i) => ({
+      repair_job_id: parsed.data.job_id,
+      product_id: i.product_id,
+      qty: i.qty,
+      unit_price: i.unit_price,
+      is_optional: i.is_optional,
+    })),
+  );
+  if (itemsErr) return { ok: false, error: itemsErr.message };
+
+  // reserve stock FIFO per item
+  for (const it of parsed.data.items) {
+    const { error: rsvErr } = await supabase.rpc("reserve_stock" as never, {
+      p_product_id: it.product_id,
+      p_qty: it.qty,
+    } as never);
+    if (rsvErr) {
+      return {
+        ok: false,
+        error: `Reservation failed for product ${it.product_id}: ${rsvErr.message}`,
+      };
+    }
+  }
+
+  revalidatePath("/dashboard/repair-orders");
+  return { ok: true, data: { count: parsed.data.items.length } };
+}
+
+export async function deliverRepairJob(
+  input: unknown,
+): Promise<ActionResult<{ jobId: string }>> {
+  await requireRole(["owner", "manager", "technician"]);
+  const { deliverSchema } = await import("./_lib/schema");
+  const parsed = deliverSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("repair_jobs")
+    .update({ status: "delivered", delivered_at: new Date().toISOString() })
+    .eq("id", parsed.data.job_id)
+    .eq("status", "done"); // guard: only done → delivered
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/dashboard/repair-orders");
+  return { ok: true, data: { jobId: parsed.data.job_id } };
+}
+
 export async function closeRepairJob(input: unknown): Promise<ActionResult<{ jobId: string }>> {
   const { profile } = await requireRole(["owner", "manager", "technician"]);
   const parsed = closeSchema.safeParse(input);

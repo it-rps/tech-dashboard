@@ -27,3 +27,12 @@ export const closeSchema = z.object({
   labor_fee: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
 });
+
+export const addPartsSchema = z.object({
+  job_id: z.string().uuid(),
+  items: z.array(repairOrderItemSchema).min(1),
+});
+
+export const deliverSchema = z.object({
+  job_id: z.string().uuid(),
+});

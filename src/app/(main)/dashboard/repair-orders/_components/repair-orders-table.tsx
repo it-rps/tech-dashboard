@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/select";
 
 import type { RepairJobRow } from "../actions";
-import { closeRepairJob, createRepairJob } from "../actions";
-import { intakeSchema } from "../_lib/schema";
+import { addRepairJobItems, closeRepairJob, createRepairJob, deliverRepairJob } from "../actions";
+import { addPartsSchema, intakeSchema } from "../_lib/schema";
 import type {
   CustomerOption,
   DeviceModelOption,
@@ -37,6 +37,7 @@ import type {
 } from "../actions";
 
 type IntakeInput = z.input<typeof intakeSchema>;
+type AddPartsInput = z.input<typeof addPartsSchema>;
 
 export function RepairOrdersTable({
   rows,
@@ -121,9 +122,17 @@ export function RepairOrdersTable({
                   {Intl.NumberFormat("th-TH", { style: "currency", currency: "THB" }).format(r.grand_total ?? 0)}
                 </td>
                 <td className="py-2">
-                  {(r.status === "received" || r.status === "diagnosing" || r.status === "waiting_parts" || r.status === "in_progress") && (
-                    <CloseJobButton jobId={r.id} busy={closing === r.id} setBusy={setClosing} />
-                  )}
+                  <div className="flex items-center gap-2">
+                    {(r.status === "received" || r.status === "diagnosing" || r.status === "waiting_parts" || r.status === "in_progress") && (
+                      <AddPartsButton jobId={r.id} products={products} busy={closing === r.id} setBusy={setClosing} />
+                    )}
+                    {(r.status === "received" || r.status === "diagnosing" || r.status === "waiting_parts" || r.status === "in_progress") && (
+                      <CloseJobButton jobId={r.id} busy={closing === r.id} setBusy={setClosing} />
+                    )}
+                    {r.status === "done" && (
+                      <DeliverButton jobId={r.id} busy={closing === r.id} setBusy={setClosing} />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -138,6 +147,172 @@ export function RepairOrdersTable({
         </table>
       </div>
     </div>
+  );
+}
+
+function AddPartsButton({
+  jobId,
+  products,
+  busy,
+  setBusy,
+}: {
+  jobId: string;
+  products: ProductOption[];
+  busy: boolean;
+  setBusy: (v: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)} disabled={busy}>
+        Parts
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Add parts</DialogTitle>
+            <DialogDescription>Reservation only. Cost is set when the job is closed (FIFO).</DialogDescription>
+          </DialogHeader>
+          <AddPartsForm
+            jobId={jobId}
+            products={products}
+            busy={busy}
+            setBusy={setBusy}
+            onClose={() => setOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function AddPartsForm({
+  jobId,
+  products,
+  busy,
+  setBusy,
+  onClose,
+}: {
+  jobId: string;
+  products: ProductOption[];
+  busy: boolean;
+  setBusy: (v: string | null) => void;
+  onClose: () => void;
+}) {
+  const form = useForm<AddPartsInput>({
+    resolver: zodResolver(addPartsSchema) as never,
+    defaultValues: {
+      job_id: jobId,
+      items: [{ product_id: "", qty: 1, unit_price: 0, is_optional: false }],
+    },
+  });
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
+
+  const onSubmit = async (data: AddPartsInput) => {
+    setBusy(jobId);
+    const r = await addRepairJobItems(data as never);
+    if (r.ok) {
+      toast.success(`Added ${r.data.count} part(s)`);
+      onClose();
+    } else toast.error(r.error);
+    setBusy(null);
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+      {fields.map((f, i) => (
+        <div key={f.id} className="flex items-end gap-2">
+          <Controller
+            control={form.control}
+            name={`items.${i}.product_id` as never}
+            render={({ field }) => (
+              <div className="flex-1">
+                <Label className="sr-only">Product</Label>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name_th} ({p.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          />
+          <Controller
+            control={form.control}
+            name={`items.${i}.qty` as never}
+            render={({ field }) => (
+              <div>
+                <Label className="sr-only">Qty</Label>
+                <Input type="number" min={1} placeholder="Qty" {...field} className="w-20" />
+              </div>
+            )}
+          />
+          <Controller
+            control={form.control}
+            name={`items.${i}.unit_price` as never}
+            render={({ field }) => (
+              <div>
+                <Label className="sr-only">Price</Label>
+                <Input type="number" min={0} step={0.01} placeholder="Price" {...field} className="w-32" />
+              </div>
+            )}
+          />
+          <Button type="button" variant="ghost" size="icon" onClick={() => remove(i)} disabled={fields.length === 1}>
+            ✕
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => append({ product_id: "", qty: 1, unit_price: 0, is_optional: false })}
+      >
+        Add row
+      </Button>
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={busy}>
+          {busy ? "Saving..." : "Add parts"}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+function DeliverButton({
+  jobId,
+  busy,
+  setBusy,
+}: {
+  jobId: string;
+  busy: boolean;
+  setBusy: (v: string | null) => void;
+}) {
+  return (
+    <Button
+      size="sm"
+      variant="default"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(jobId);
+        const r = await deliverRepairJob({ job_id: jobId });
+        if (r.ok) toast.success("Delivered");
+        else toast.error(r.error);
+        setBusy(null);
+      }}
+    >
+      {busy ? "..." : "Deliver"}
+    </Button>
   );
 }
 
