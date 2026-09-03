@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { requireUser } from "@/lib/auth/guard";
+import { requireUser, canSeeCost } from "@/lib/auth/guard";
 import { formatTHB } from "@/lib/money";
 import { Badge } from "@/components/ui/badge";
+import { AdjustDialog } from "../_components/adjust-dialog";
 import { getProductLots } from "../_lib/queries";
 
 export default async function ProductStockDetail({
@@ -68,6 +69,22 @@ export default async function ProductStockDetail({
             </div>
           </>
         ) : null}
+      </div>
+
+      {/* Adjust button + Lots heading */}
+      <div className="flex items-center justify-between">
+        {profile.role === "owner" || profile.role === "manager" ? (
+          <AdjustDialog
+            productId={p.product_id}
+            lots={lots}
+            canSeeCost={canSeeCost(profile.role)}
+          />
+        ) : (
+          <div />
+        )}
+        <span className="text-muted-foreground text-xs">
+          {lots.length} lot{lots.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
       {/* Lots table */}
