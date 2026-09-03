@@ -1,8 +1,10 @@
 // src/lib/auth/guard.ts
 import "server-only";
+
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+
 import type { Database } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 type Role = Database["public"]["Enums"]["user_role"];
 

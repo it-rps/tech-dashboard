@@ -1,6 +1,8 @@
 // src/lib/supabase/server.ts
 import { cookies } from "next/headers";
+
 import { createServerClient } from "@supabase/ssr";
+
 import type { Database } from "./database.types";
 
 export async function createClient() {
@@ -21,6 +23,6 @@ export async function createClient() {
           }
         },
       },
-    }
+    },
   );
 }
